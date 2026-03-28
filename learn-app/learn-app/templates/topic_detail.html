@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ topic.name }} — LEARN{% endblock %}
+{% block content %}
+<div class="container-wide">
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a href="{{ url_for('main.domains') }}">Domains</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="{{ url_for('main.domain_detail', domain_id=topic.domain_id) }}">{{ topic.domain.name }}</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>{{ topic.name }}</span>
+    </div>
+    <h1 class="page-title fade-up">{{ topic.name }}</h1>
+  </div>
+
+  {% if topic.explanation %}
+  <div class="explanation-box fade-up fade-up-1">
+    <div class="explanation-label">📖 Concept Explained</div>
+    <div class="explanation-text">{{ topic.explanation }}</div>
+  </div>
+  {% endif %}
+
+  <div class="section-header fade-up fade-up-2">
+    <h2 class="section-title">Real-World Applications</h2>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div class="tabs">
+        <a href="?sort=votes" class="tab {% if sort == 'votes' %}active{% endif %}">▲ Most Upvoted</a>
+        <a href="?sort=recent" class="tab {% if sort == 'recent' %}active{% endif %}">🕐 Recent</a>
+        <a href="?sort=discussed" class="tab {% if sort == 'discussed' %}active{% endif %}">💬 Most Discussed</a>
+      </div>
+      {% if current_user.mode == 'teach' %}
+      <a href="{{ url_for('app_routes.add_application') }}" class="btn btn-primary btn-sm">+ Add Application</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if applications %}
+  <div class="grid-3">
+    {% for app in applications %}
+    <a href="{{ url_for('app_routes.application_detail', app_id=app.id) }}" class="card fade-up" style="animation-delay:{{ loop.index0 * 0.06 }}s;display:block;text-decoration:none;">
+      <div class="card-img">
+        {% if app.image_path and not app.image_path.endswith('.svg') %}
+          <img src="{{ url_for('static', filename='uploads/' + app.image_path) }}" alt="{{ app.title }}" loading="lazy">
+        {% else %}
+          <span>{{ topic.domain.icon }}</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if app.application_domain %}
+        <span class="tag mb-8">{{ app.application_domain }}</span>
+        {% endif %}
+        <h3 class="card-title mt-8">{{ app.title }}</h3>
+        <p class="card-desc">{{ app.description }}</p>
+
+        {% if app.get_tags_list() %}
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:12px;">
+          {% for tag in app.get_tags_list()[:3] %}
+          <span class="tag" style="font-size:0.7rem;">{{ tag }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-footer">
+        <div class="author-line">
+          <div class="author-avatar">{{ app.author.name[0] }}</div>
+          {{ app.author.name }}
+          {% if app.author.is_verified %}<span class="badge badge-verified">✓</span>{% endif %}
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;font-size:0.82rem;color:var(--text-muted);">
+          <span>▲ {{ app.vote_count }}</span>
+          <span>💬 {{ app.comment_count() }}</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🌱</div>
+    <h3>No applications yet</h3>
+    <p>Be the first to submit a real-world application of <strong>{{ topic.name }}</strong>.</p>
+    <a href="{{ url_for('app_routes.add_application') }}" class="btn btn-primary mt-16">+ Add Application</a>
+  </div>
+  {% endif %}
+
+  <div style="padding-bottom:60px;"></div>
+</div>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — LEARN{% endblock %}
+{% block content %}
+
+<!-- Dashboard header with gradient -->
+<div class="dashboard-header">
+  <div class="container">
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div style="width:60px;height:60px;background:rgba(255,255,255,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800;border:2px solid rgba(255,255,255,0.3);">
+        {{ current_user.name[0].upper() }}
+      </div>
+      <div>
+        <h1 style="font-size:1.8rem;margin-bottom:3px;">{{ current_user.name }}</h1>
+        <p>
+          {{ current_user.email }}
+          {% if current_user.is_verified %}· <span style="color:rgba(255,255,255,0.9);font-size:0.85rem;">✓ Verified Contributor</span>{% endif %}
+        </p>
+      </div>
+      <div style="margin-left:auto;">
+        <a href="{{ url_for('app_routes.add_application') }}" class="btn" style="background:white;color:var(--accent);font-weight:700;">+ Add Application</a>
+      </div>
+    </div>
+
+    <div class="dashboard-stat-cards">
+      <div class="dash-stat-card">
+        <div class="dash-stat-value">{{ user_apps | length }}</div>
+        <div class="dash-stat-label">Applications</div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-value">{{ total_votes }}</div>
+        <div class="dash-stat-label">Total Upvotes</div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-value">{{ current_user.reputation }}</div>
+        <div class="dash-stat-label">Reputation</div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-value">{{ current_user.mode | capitalize if current_user.mode else '—' }}</div>
+        <div class="dash-stat-label">Current Mode</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="padding-top:36px;padding-bottom:60px;">
+
+  <!-- Mode Switcher -->
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div style="font-family:var(--font-display);font-weight:700;margin-bottom:4px;">Current Mode: {{ current_user.mode | capitalize if current_user.mode else 'Not set' }}</div>
+      <div style="font-size:0.83rem;color:var(--text-secondary);">Switch modes anytime to explore or contribute.</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <a href="{{ url_for('main.switch_mode', mode='learn') }}" class="btn {% if current_user.mode == 'learn' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">🎓 Learn</a>
+      <a href="{{ url_for('main.switch_mode', mode='teach') }}" class="btn {% if current_user.mode == 'teach' %}btn-primary{% else %}btn-ghost{% endif %} btn-sm">🧑‍🏫 Teach</a>
+    </div>
+  </div>
+
+  <!-- My Applications -->
+  <div class="section-header">
+    <h2 class="section-title">My Applications</h2>
+    <a href="{{ url_for('app_routes.add_application') }}" class="btn btn-primary btn-sm">+ Add New</a>
+  </div>
+
+  {% if user_apps %}
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Application</th>
+          <th>Topic</th>
+          <th>Domain</th>
+          <th>Upvotes</th>
+          <th>Date</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for app in user_apps %}
+        <tr>
+          <td>
+            <div style="font-weight:600;font-size:0.9rem;">{{ app.title }}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;">{{ app.description[:80] }}…</div>
+          </td>
+          <td>
+            <a href="{{ url_for('main.topic_detail', topic_id=app.topic_id) }}" style="color:var(--accent);font-size:0.83rem;">{{ app.topic.name }}</a>
+          </td>
+          <td>
+            {% if app.application_domain %}
+            <span class="tag">{{ app.application_domain }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <span style="font-family:var(--font-display);font-weight:700;color:var(--accent);">{{ app.vote_count }}</span>
+          </td>
+          <td style="color:var(--text-muted);font-size:0.82rem;white-space:nowrap;">
+            {{ app.created_at.strftime('%b %d, %Y') }}
+          </td>
+          <td>
+            <a href="{{ url_for('app_routes.application_detail', app_id=app.id) }}" class="btn btn-ghost btn-sm">View →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📝</div>
+    <h3>No applications yet</h3>
+    <p>Share your knowledge by submitting your first real-world application.</p>
+    <a href="{{ url_for('app_routes.add_application') }}" class="btn btn-primary mt-16">+ Add Your First Application</a>
+  </div>
+  {% endif %}
+
+  <!-- Quick links -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:32px;">
+    <a href="{{ url_for('main.domains') }}" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-decoration:none;color:var(--text);display:flex;align-items:center;gap:10px;font-weight:600;font-size:0.9rem;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      🌍 Explore Domains
+    </a>
+    <a href="{{ url_for('main.search') }}" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-decoration:none;color:var(--text);display:flex;align-items:center;gap:10px;font-weight:600;font-size:0.9rem;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      🔍 Search
+    </a>
+    <a href="{{ url_for('main.mode_select') }}" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-decoration:none;color:var(--text);display:flex;align-items:center;gap:10px;font-weight:600;font-size:0.9rem;transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      ⚡ Switch Mode
+    </a>
+    {% if current_user.role == 'admin' %}
+    <a href="{{ url_for('main.admin_panel') }}" style="background:var(--amber-light);border:1px solid rgba(217,119,6,0.2);border-radius:var(--radius);padding:16px;text-decoration:none;color:var(--amber);display:flex;align-items:center;gap:10px;font-weight:600;font-size:0.9rem;">
+      ⚙ Admin Panel
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}
