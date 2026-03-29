@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}LEARN — Knowledge Through Real-World Applications{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="hero-eyebrow">✦ The knowledge platform for curious minds</div>
+  <h1 class="hero-title fade-up">Where concepts meet<br><em>the real world</em></h1>
+  <p class="hero-subtitle fade-up fade-up-1">Explore how scientific principles power everyday technology. Learn, contribute, and discover applications across every domain of human knowledge.</p>
+  <div class="hero-cta fade-up fade-up-2">
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Start Learning →</a>
+    <a href="{{ url_for('auth.login') }}" class="btn btn-ghost btn-lg">Sign in</a>
+  </div>
+</section>
+
+<!-- Domain preview strip -->
+<section style="padding: 0 24px 80px;">
+  <div class="container-wide">
+    <div class="section-header">
+      <h2 class="section-title">Explore Domains</h2>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-ghost btn-sm">See all →</a>
+    </div>
+    <div class="grid-4">
+      {% set preview_domains = [('Physics', '⚛️'), ('Computer Science', '💻'), ('Biology', '🧬'), ('Mathematics', '📐'), ('Medical & Healthcare', '🏥'), ('AI & Machine Learning', '🤖'), ('Psychology', '🧠'), ('Economics & Finance', '📈')] %}
+      {% for name, icon in preview_domains %}
+      <div class="domain-card" style="cursor:default;">
+        <span class="domain-icon">{{ icon }}</span>
+        <div class="domain-name">{{ name }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured Applications -->
+{% if featured %}
+<section style="padding: 0 24px 100px; background: var(--bg-secondary); padding-top: 60px;">
+  <div class="container-wide">
+    <div class="section-header">
+      <h2 class="section-title">Featured Applications</h2>
+      <span class="tag tag-accent">Community picks</span>
+    </div>
+    <div class="grid-3">
+      {% for app in featured %}
+      <div class="card fade-up" style="animation-delay: {{ loop.index0 * 0.08 }}s">
+        <div class="card-img">
+          {% if app.image_path and not app.image_path.endswith('.svg') %}
+            <img src="{{ url_for('static', filename='uploads/' + app.image_path) }}" alt="{{ app.title }}">
+          {% else %}
+            <span>🔬</span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div class="tag tag-accent mb-8">{{ app.topic.name }}</div>
+          <h3 class="card-title mt-8">{{ app.title }}</h3>
+          <p class="card-desc">{{ app.description }}</p>
+        </div>
+        <div class="card-footer">
+          <div class="author-line">
+            <div class="author-avatar">{{ app.author.name[0] }}</div>
+            {{ app.author.name }}
+            {% if app.author.is_verified %}<span class="badge badge-verified">✓ Verified</span>{% endif %}
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:0.82rem;">
+            ▲ {{ app.vote_count }}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- How it works -->
+<section style="padding: 80px 24px;">
+  <div class="container" style="text-align:center;">
+    <h2 class="page-title mb-16">Two ways to use LEARN</h2>
+    <p style="color:var(--text-secondary);margin-bottom:48px;">Pick your role — or do both.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:left;">
+      <div class="card" style="padding:32px;">
+        <div style="font-size:2.5rem;margin-bottom:16px;">🎓</div>
+        <h3 style="font-family:var(--font-display);font-size:1.3rem;margin-bottom:10px;">Learn Mode</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">Browse domains, discover topics, and see exactly how abstract concepts are applied in the real world — from aviation to medicine to finance.</p>
+      </div>
+      <div class="card" style="padding:32px;">
+        <div style="font-size:2.5rem;margin-bottom:16px;">🧑‍🏫</div>
+        <h3 style="font-family:var(--font-display);font-size:1.3rem;margin-bottom:10px;">Teach Mode</h3>
+        <p style="color:var(--text-secondary);font-size:0.9rem;line-height:1.6;">Contribute your knowledge. Submit real-world applications of concepts, upload images, add sources, and earn reputation within the community.</p>
+      </div>
+    </div>
+    <div style="margin-top:40px;">
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">Join LEARN — it's free</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Explore Domains — LEARN{% endblock %}
+{% block content %}
+<div class="container-wide">
+  <div class="page-header fade-up">
+    <h1 class="page-title">Explore Domains</h1>
+    <p class="page-subtitle">Dive into any field of knowledge and discover how concepts come to life in the real world.</p>
+  </div>
+
+  <div class="grid-4 fade-up fade-up-1">
+    {% for domain in domains %}
+    <a href="{{ url_for('main.domain_detail', domain_id=domain.id) }}" class="domain-card">
+      <span class="domain-icon">{{ domain.icon }}</span>
+      <div class="domain-name">{{ domain.name }}</div>
+      <div class="domain-desc">{{ domain.description }}</div>
+      <div class="domain-count">{{ domain.topics | length }} topic{% if domain.topics | length != 1 %}s{% endif %}</div>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if not domains %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📭</div>
+    <h3>No domains yet</h3>
+    <p>Check back soon.</p>
+  </div>
+  {% endif %}
+
+  <div style="padding-bottom:60px;"></div>
+</div>
+{% endblock %}

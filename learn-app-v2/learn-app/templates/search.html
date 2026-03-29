@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Search: {{ query }} — LEARN{% endblock %}
+{% block content %}
+<div class="container-wide" style="padding-top:40px;padding-bottom:60px;">
+
+  <div class="page-header" style="padding-top:0;">
+    <h1 class="page-title">Search Results</h1>
+    {% if query %}
+    <p class="page-subtitle">Results for "<strong>{{ query }}</strong>"</p>
+    {% endif %}
+  </div>
+
+  <!-- Search form (large) -->
+  <form action="{{ url_for('main.search') }}" method="get" style="margin-bottom:40px;" autocomplete="off">
+    <div style="display:flex;gap:8px;max-width:600px;">
+      <div class="search-wrap" style="flex:1;border-radius:var(--radius-sm);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" name="q" value="{{ query }}" placeholder="Search concepts, applications…" style="padding:12px 0;" autofocus>
+      </div>
+      <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+  </form>
+
+  {% if query %}
+
+  <!-- Topics found -->
+  {% if topics %}
+  <div style="margin-bottom:36px;">
+    <div class="section-header">
+      <h2 class="section-title">📚 Topics</h2>
+      <span class="tag">{{ topics | length }} found</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      {% for topic in topics %}
+      <a href="{{ url_for('main.topic_detail', topic_id=topic.id) }}" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;text-decoration:none;color:var(--text);transition:all var(--transition);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div>
+          <div style="font-family:var(--font-display);font-weight:700;font-size:1rem;">{{ topic.name }}</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:3px;">{{ topic.domain.icon }} {{ topic.domain.name }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;color:var(--text-muted);font-size:0.82rem;">
+          <span>{{ topic.applications | length }} applications</span>
+          <span style="color:var(--accent);">→</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Applications found -->
+  {% if applications %}
+  <div>
+    <div class="section-header">
+      <h2 class="section-title">🔬 Applications</h2>
+      <span class="tag">{{ applications | length }} found</span>
+    </div>
+    <div class="grid-3">
+      {% for app in applications %}
+      <a href="{{ url_for('app_routes.application_detail', app_id=app.id) }}" class="card fade-up" style="display:block;text-decoration:none;animation-delay:{{ loop.index0 * 0.05 }}s;">
+        <div class="card-img">
+          {% if app.image_path and not app.image_path.endswith('.svg') %}
+            <img src="{{ url_for('static', filename='uploads/' + app.image_path) }}" alt="{{ app.title }}" loading="lazy">
+          {% else %}
+            <span>{{ app.topic.domain.icon }}</span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            <span class="tag tag-accent">{{ app.topic.name }}</span>
+            {% if app.application_domain %}<span class="tag">{{ app.application_domain }}</span>{% endif %}
+          </div>
+          <h3 class="card-title">{{ app.title }}</h3>
+          <p class="card-desc">{{ app.description }}</p>
+        </div>
+        <div class="card-footer">
+          <div class="author-line">
+            <div class="author-avatar">{{ app.author.name[0] }}</div>
+            {{ app.author.name }}
+            {% if app.author.is_verified %}<span class="badge badge-verified">✓</span>{% endif %}
+          </div>
+          <span style="font-size:0.82rem;color:var(--text-muted);">▲ {{ app.vote_count }}</span>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if not topics and not applications %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🔍</div>
+    <h3>No results for "{{ query }}"</h3>
+    <p>Try different keywords, or <a href="{{ url_for('app_routes.add_application') }}" style="color:var(--accent);">add an application</a> on this topic.</p>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">🔍</div>
+    <h3>Start searching</h3>
+    <p>Try searching for concepts like "Bernoulli's Principle" or "Binary Search".</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

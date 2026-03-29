@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}{{ topic.name }} — LEARN{% endblock %}
+
+{% block content %}
+<div class="container-wide">
+
+  <!-- ══ Page header ═════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="breadcrumb">
+      <a href="{{ url_for('main.domains') }}">Domains</a>
+      <span class="breadcrumb-sep">›</span>
+      <a href="{{ url_for('main.domain_detail', domain_id=topic.domain_id) }}">{{ topic.domain.name }}</a>
+      <span class="breadcrumb-sep">›</span>
+      <span>{{ topic.name }}</span>
+    </div>
+    <h1 class="page-title fade-up">{{ topic.name }}</h1>
+  </div>
+
+  <!-- Concept explanation box -->
+  {% if topic.explanation %}
+  <div class="explanation-box fade-up fade-up-1">
+    <div class="explanation-label">📖 Concept Explained</div>
+    <div class="explanation-text">{{ topic.explanation }}</div>
+  </div>
+  {% endif %}
+
+  <!-- ══ Controls bar ══════════════════════════════════════════ -->
+  <div class="fade-up fade-up-2" style="margin-bottom:24px;">
+
+    <!-- Title + add button -->
+    <div class="section-header" style="margin-bottom:14px;">
+      <h2 class="section-title">
+        Real-World Applications
+        <span style="color:var(--text-muted);font-size:0.85rem;font-weight:400;margin-left:6px;">
+          ({{ applications | length }}{% if difficulty_filter != 'all' %} of {{ difficulty_counts.values() | sum }}{% endif %})
+        </span>
+      </h2>
+      {% if current_user.mode == 'teach' %}
+      <a href="{{ url_for('app_routes.add_application') }}" class="btn btn-primary btn-sm">+ Add Application</a>
+      {% endif %}
+    </div>
+
+    <!-- Sort tabs + difficulty filter pills -->
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;row-gap:10px;">
+
+      <div class="tabs">
+        <a href="{{ url_for('main.topic_detail', topic_id=topic.id, sort='votes',      difficulty=difficulty_filter) }}"
+           class="tab {% if sort == 'votes' %}active{% endif %}">▲ Top</a>
+        <a href="{{ url_for('main.topic_detail', topic_id=topic.id, sort='recent',     difficulty=difficulty_filter) }}"
+           class="tab {% if sort == 'recent' %}active{% endif %}">🕐 Recent</a>
+        <a href="{{ url_for('main.topic_detail', topic_id=topic.id, sort='discussed',  difficulty=difficulty_filter) }}"
+           class="tab {% if sort == 'discussed' %}active{% endif %}">💬 Discussed</a>
+        <a href="{{ url_for('main.topic_detail', topic_id=topic.id, sort='difficulty', difficulty='all') }}"
+           class="tab {% if sort == 'difficulty' %}active{% endif %}">📶 By Level</a>
+      </div>
+
+      <!-- Difficulty filter pills -->
+      <div class="diff-filter-bar">
+        <a href="{{ url_for('main.topic_detail', topic_id=topic.id, sort=sort, difficulty='all') }}"
+           class="diff-filter-btn all {% if difficulty_filter == 'all' %}active{% endif %}">
+          All
+          <span class="diff-filter-count">{{ difficulty_counts.values() | sum }}</span>
+        </a>
+        {% for level in difficulty_levels %}
+        <a href="{{ url_for('main.topic_detail', topic_id=topic.id, sort=sort, difficulty=level) }}"
+           class="diff-filter-btn {{ level | lower }} {% if difficulty_filter == level %}active{% endif %}">
+          {{ level }}
+          <span class="diff-filter-count">{{ difficulty_counts[level] }}</span>
+        </a>
+        {% endfor %}
+      </div>
+
+    </div>
+
+    <!-- Active filter indicator -->
+    {% if difficulty_filter != 'all' %}
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-secondary);">
+      Showing only
+      <span class="diff-badge diff-badge-{{ difficulty_filter | lower }}" style="pointer-events:none;">{{ difficulty_filter }}</span>
+      applications ·
+      <a href="{{ url_for('main.topic_detail', topic_id=topic.id, sort=sort, difficulty='all') }}"
+         style="color:var(--accent);">Clear filter ×</a>
+    </div>
+    {% endif %}
+
+  </div><!-- /controls -->
+
+  <!-- ══ Application listing ════════════════════════════════ -->
+  {% if applications %}
+
+    <!-- GROUPED VIEW: when sorted by difficulty, show level headers -->
+    {% if sort == 'difficulty' and difficulty_filter == 'all' %}
+
+      {% for level in difficulty_levels %}
+        {% set ns = namespace(level_apps=[]) %}
+        {% for app in applications %}
+          {% if app.difficulty_level == level %}
+            {% set ns.level_apps = ns.level_apps + [app] %}
+          {% endif %}
+        {% endfor %}
+
+        {% if ns.level_apps %}
+        <!-- Group header -->
+        <div class="diff-group-header">
+          <span class="diff-badge diff-badge-{{ level | lower }}" style="pointer-events:none;">{{ level }}</span>
+          <span class="diff-group-label">{{ level }}</span>
+          <span class="diff-group-count">
+            {{ ns.level_apps | length }} application{% if ns.level_apps | length != 1 %}s{% endif %}
+          </span>
+        </div>
+
+        <div class="grid-3" style="margin-bottom:8px;">
+          {% for app in ns.level_apps %}
+          <a href="{{ url_for('app_routes.application_detail', app_id=app.id) }}"
+             class="card fade-up"
+             data-difficulty="{{ app.difficulty_level }}"
+             style="animation-delay:{{ loop.index0 * 0.06 }}s;display:block;text-decoration:none;">
+            <div class="card-img">
+              {% if app.image_path and not app.image_path.endswith('.svg') %}
+                <img src="{{ url_for('static', filename='uploads/' + app.image_path) }}"
+                     alt="{{ app.title }}" loading="lazy">
+              {% else %}
+                <span>{{ topic.domain.icon }}</span>
+              {% endif %}
+            </div>
+            <div class="card-body">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+                {% if app.application_domain %}
+                <span class="tag" style="font-size:0.72rem;">{{ app.application_domain }}</span>
+                {% else %}<span></span>{% endif %}
+                <span class="diff-badge diff-badge-{{ app.difficulty_level | lower }}" style="pointer-events:none;">{{ app.difficulty_level }}</span>
+              </div>
+              <h3 class="card-title">{{ app.title }}</h3>
+              <p class="card-desc">{{ app.description }}</p>
+              {% if app.get_tags_list() %}
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:12px;">
+                {% for tag in app.get_tags_list()[:3] %}
+                <span class="tag" style="font-size:0.7rem;">{{ tag }}</span>
+                {% endfor %}
+              </div>
+              {% endif %}
+            </div>
+            <div class="card-footer">
+              <div class="author-line">
+                <div class="author-avatar">{{ app.author.name[0] }}</div>
+                {{ app.author.name }}
+                {% if app.author.is_verified %}<span class="badge badge-verified">✓</span>{% endif %}
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;font-size:0.82rem;color:var(--text-muted);">
+                <span>▲ {{ app.vote_count }}</span>
+                <span>💬 {{ app.comment_count() }}</span>
+              </div>
+            </div>
+          </a>
+          {% endfor %}
+        </div><!-- /grid -->
+        {% endif %}
+      {% endfor %}
+
+    {% else %}
+    <!-- FLAT GRID VIEW (all other sorts / filtered view) -->
+    <div class="grid-3" id="appGrid">
+      {% for app in applications %}
+      <a href="{{ url_for('app_routes.application_detail', app_id=app.id) }}"
+         class="card fade-up"
+         data-difficulty="{{ app.difficulty_level }}"
+         style="animation-delay:{{ loop.index0 * 0.06 }}s;display:block;text-decoration:none;">
+        <div class="card-img">
+          {% if app.image_path and not app.image_path.endswith('.svg') %}
+            <img src="{{ url_for('static', filename='uploads/' + app.image_path) }}"
+                 alt="{{ app.title }}" loading="lazy">
+          {% else %}
+            <span>{{ topic.domain.icon }}</span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <!-- Domain tag + difficulty badge -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+            {% if app.application_domain %}
+            <span class="tag" style="font-size:0.72rem;">{{ app.application_domain }}</span>
+            {% else %}<span></span>{% endif %}
+            <span class="diff-badge diff-badge-{{ app.difficulty_level | lower }}"
+                  data-tooltip="{% if app.difficulty_level == 'Fundamental' %}No prior knowledge needed.{% elif app.difficulty_level == 'Intermediate' %}Some background helpful.{% else %}Domain expertise recommended.{% endif %}"
+                  style="pointer-events:none;">{{ app.difficulty_level }}</span>
+          </div>
+          <h3 class="card-title">{{ app.title }}</h3>
+          <p class="card-desc">{{ app.description }}</p>
+          {% if app.get_tags_list() %}
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:12px;">
+            {% for tag in app.get_tags_list()[:3] %}
+            <span class="tag" style="font-size:0.7rem;">{{ tag }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="card-footer">
+          <div class="author-line">
+            <div class="author-avatar">{{ app.author.name[0] }}</div>
+            {{ app.author.name }}
+            {% if app.author.is_verified %}<span class="badge badge-verified">✓</span>{% endif %}
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;font-size:0.82rem;color:var(--text-muted);">
+            <span>▲ {{ app.vote_count }}</span>
+            <span>💬 {{ app.comment_count() }}</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  {% else %}
+  <!-- Empty state -->
+  <div class="empty-state">
+    <div class="empty-state-icon">🌱</div>
+    {% if difficulty_filter != 'all' %}
+    <h3>No {{ difficulty_filter }} applications yet</h3>
+    <p>Try a different level, or
+      <a href="{{ url_for('main.topic_detail', topic_id=topic.id, sort=sort) }}" style="color:var(--accent);">view all</a>.
+    </p>
+    {% else %}
+    <h3>No applications yet</h3>
+    <p>Be the first to submit a real-world application of <strong>{{ topic.name }}</strong>.</p>
+    {% endif %}
+    <a href="{{ url_for('app_routes.add_application') }}" class="btn btn-primary mt-16">+ Add Application</a>
+  </div>
+  {% endif %}
+
+  <!-- ══ Difficulty legend strip ═════════════════════════════ -->
+  <div style="margin-top:48px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px 28px;" class="fade-up">
+    <div style="font-family:var(--font-display);font-size:0.75rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:16px;">
+      📶 Difficulty Guide
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+      <div class="diff-legend-item">
+        <div class="diff-legend-dot diff-legend-dot-fundamental" style="margin-top:3px;"></div>
+        <div>
+          <div class="diff-legend-label">Fundamental</div>
+          <div class="diff-legend-desc">No prior knowledge needed. Ideal starting point for any learner.</div>
+        </div>
+      </div>
+      <div class="diff-legend-item">
+        <div class="diff-legend-dot diff-legend-dot-intermediate" style="margin-top:3px;"></div>
+        <div>
+          <div class="diff-legend-label">Intermediate</div>
+          <div class="diff-legend-desc">Some familiarity with the domain recommended. Builds on fundamentals.</div>
+        </div>
+      </div>
+      <div class="diff-legend-item">
+        <div class="diff-legend-dot diff-legend-dot-advanced" style="margin-top:3px;"></div>
+        <div>
+          <div class="diff-legend-label">Advanced</div>
+          <div class="diff-legend-desc">High technical depth. Assumes solid domain knowledge.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding-bottom:60px;"></div>
+</div>
+{% endblock %}
