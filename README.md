@@ -26,6 +26,9 @@ LEARN is not just another educational platform or content repository. Its unique
 
 * Built-in Moderation and Credibility
   Features like reporting, verification, and voting ensure content quality and reliability.
+  
+ # Difficulty-Based Learning
+ Applications are categorized into Fundamental, Intermediate, and Advanced levels, allowing users to explore concepts based on their understanding and learning stage.
 
 ## Problem It Solves
 
